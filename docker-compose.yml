@@ -1,0 +1,54 @@
+version: '3'
+services:
+
+  web:
+    image: node:18-alpine
+    container_name: fedu-web
+    working_dir: /app
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run dev"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    container_name: fedu-api
+    working_dir: /app
+    volumes:
+      - ./api:/app:rw
+      - /app/node_modules
+    ports:
+      - "5000:5000"
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - mongo
+      - mysql
+
+  mongo:
+    image: mongo:5
+    container_name: fedu-mongo
+    ports:
+      - "27018:27017" # tránh trùng port với mongodb ở máy local. Khi kết nối bằng ứng dụng desktop như mongodb compass thì dùng port 27018, host là localhost
+    volumes:
+      - ./mongo/data:/data/db:rw
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: 123
+      MONGO_INITDB_DATABASE: mydb
+
+  mysql:
+    image: mysql:8.2
+    container_name: fedu-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123
+      - MYSQL_DATABASE=mydb
+    volumes:
+      - ./mysql/data:/var/lib/mysql:rw
+    ports:
+      - "3307:3306" # tránh trùng port với mysql ở máy local. Khi kết nối bằng ứng dụng desktop như mysql workbench thì dùng port 3307, host là localhost
